@@ -1,247 +1,181 @@
-Absolutely! Here’s a **fully formatted, developer-friendly Markdown README** for your Sinhala Handwritten OCR backend. It includes **tables, collapsible sections, and a quick-start guide** to make it professional and easy to navigate.
+
 
 ---
 
-# Sinhala Handwritten OCR API
+# **Sinhala Handwritten OCR** 🖋️
 
-A Flask-based REST API for recognizing **Sinhala handwritten text** using a deep learning CNN model. The backend processes images, segments characters, predicts Sinhala letters, and reconstructs full sentences with confidence scores.
+[![Python](https://img.shields.io/badge/Python-3.10-blue)](https://www.python.org/)
+[![React](https://img.shields.io/badge/React-18.2.0-blue?logo=react)](https://reactjs.org/)
+[![TensorFlow](https://img.shields.io/badge/TensorFlow-2.x-orange?logo=tensorflow)](https://www.tensorflow.org/)
+[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
----
-
-## Table of Contents
-
-1. [Features](#features)
-2. [Project Structure](#project-structure)
-3. [How It Works](#how-it-works)
-4. [API Endpoints](#api-endpoints)
-5. [Quick Start](#quick-start)
-6. [Error Handling](#error-handling)
-7. [Performance Tips](#performance-tips)
-8. [Future Improvements](#future-improvements)
-9. [Tech Stack](#tech-stack)
-10. [Author & Support](#author--support)
+A **full-stack OCR system** to recognize **handwritten Sinhala text** from images (phone camera or webcam) using **CNN + Flask backend + React frontend**.
 
 ---
 
-## Features
+## **🚀 Features**
 
-| Category                | Features                                                                                                                                     |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| **OCR Pipeline**        | CNN-based Sinhala character recognition, Noise removal & preprocessing, Automatic deskew, Character segmentation, Word & line reconstruction |
-| **Smart Output**        | Confidence score per character, Top-K predictions, Low-confidence detection, Word gap detection, Multi-line text support                     |
-| **Backend Engineering** | Model caching, Fast inference pipeline, REST API with JSON responses, Robust error handling, Health monitoring endpoint                      |
+* Capture Sinhala handwriting using **phone or webcam**.
+* Preprocess images → segment → predict each character → combine into words.
+* Returns **text + confidence per character**.
+* Mobile and desktop friendly.
+* Easily extendable for new datasets or models.
 
 ---
 
-## Project Structure
+## **📐 System Architecture**
 
-```text
-backend/
-│
-├── app.py              # Flask API (routes + server)
-├── model_loader.py     # Load and cache ML model
-├── ocr_engine.py       # Full OCR pipeline
-│
-├── models/
-│   ├── sinhala_cnn.h5
-│   └── label_map.json
-│
-├── requirements.txt
-└── README.md
+```
+[React Frontend]
+📷 Camera Capture → Preview → Send image
+📋 Result Display → Text + Per-character confidence
+       │ HTTP POST /predict
+       ▼
+[Flask Backend]
+1. Receive image
+2. Preprocess → grayscale, denoise, binarize
+3. Segment lines & characters
+4. CNN predicts each character
+5. Combine → full sentence
+6. Return JSON result
+       │
+       ▼
+[CNN Model]
+Input: 64x64 grayscale character
+Output: Sinhala letter + confidence %
 ```
 
 ---
 
-## How It Works
+## **📂 Project Structure**
 
-<details>
-<summary>Click to expand OCR Pipeline Flow</summary>
-
-1. **Image Input**
-2. **Preprocessing**
-3. **Line Segmentation**
-4. **Character Segmentation**
-5. **CNN Prediction**
-6. **Sentence Reconstruction**
-7. **JSON Response**
-
-</details>
-
-### 1. Preprocessing
-
-* Convert image to grayscale
-* Remove noise using Gaussian blur
-* Adaptive thresholding for uneven lighting
-* Morphological operations to clean strokes
-* Deskewing to correct tilted handwriting
-
-### 2. Line Segmentation
-
-* Uses horizontal projection profile
-* Automatically detects text lines
-* Filters thin/noisy lines
-
-### 3. Character Segmentation
-
-* Uses Connected Component Analysis
-* Filters noise based on width, height, and area
-* Merges nearby components (important for Sinhala diacritics)
-
-### 4. Character Prediction
-
-* Resize characters to 64x64 pixels
-* Normalize and pass through CNN
-* Returns:
-
-  * Predicted Sinhala letter
-  * Confidence score
-  * Top-K alternative predictions
-
-### 5. Sentence Reconstruction
-
-* Sort characters left → right
-* Detect word gaps
-* Combine into words, lines, and full sentences
+```bash
+sinhala_ocr_project/
+├── notebooks/          # Model training & testing notebooks
+│   ├── 01_explore_dataset.ipynb
+│   ├── 02_train_model.ipynb
+│   └── 03_test_pipeline.ipynb
+│
+├── backend/            # Flask API + OCR engine
+│   ├── app.py
+│   ├── ocr_engine.py
+│   ├── model_loader.py
+│   ├── requirements.txt
+│   └── models/
+│       ├── sinhala_cnn.h5
+│       └── label_map.json
+│
+└── frontend/           # React app
+    ├── public/
+    └── src/
+        ├── App.jsx
+        ├── components/
+        │   ├── CameraCapture.jsx
+        │   ├── ResultDisplay.jsx
+        │   └── CharacterGrid.jsx
+        └── api/
+            └── ocrApi.js
+```
 
 ---
 
-## API Endpoints
+## **⚡ Setup & Usage**
 
-| Endpoint          | Method | Description                   | Input                                 | Response                                      |
-| ----------------- | ------ | ----------------------------- | ------------------------------------- | --------------------------------------------- |
-| `/health`         | GET    | Check server and model status | None                                  | JSON status, model_ready, num_classes         |
-| `/predict`        | POST   | Predict from image upload     | `file: <image>`                       | JSON with text, lines, characters, confidence |
-| `/predict/base64` | POST   | Predict from base64 image     | `{"image_base64": "<base64 string>"}` | JSON with text, lines, characters, confidence |
+### **Backend (Flask)**
 
-**Example Response:**
+```bash
+cd backend
+pip install -r requirements.txt
+python app.py
+```
 
-```json
-{
-  "text": "සිංහල වාක්‍යය",
-  "lines": ["සිංහල වාක්‍යය"],
-  "line_count": 1,
-  "char_count": 8,
-  "avg_confidence": 87.3,
-  "characters": [
-    {
-      "letter": "ස",
-      "confidence": 94.2,
-      "low_conf": false,
-      "top_k": [
-        {"letter": "ස", "confidence": 94.2},
-        {"letter": "ශ", "confidence": 3.1}
-      ],
-      "x1": 10,
-      "x2": 42,
-      "y1": 5,
-      "y2": 60,
-      "line_idx": 0
-    }
-  ]
+* Health check: `http://localhost:5000/health`
+* `/predict` endpoint: POST an image → returns recognized text + confidence.
+
+**Python Dependencies**
+`flask`, `flask-cors`, `tensorflow`, `opencv-python-headless`, `numpy`, `pillow`
+
+---
+
+### **Frontend (React.js)**
+
+```bash
+cd frontend
+npm install
+npm start
+```
+
+* Open `http://localhost:3000`
+* Components:
+
+  * `CameraCapture.jsx` → Capture handwriting.
+  * `ResultDisplay.jsx` → Display recognized text + confidence.
+  * `CharacterGrid.jsx` → Optional character-level view.
+
+**Example API Call (`ocrApi.js`)**
+
+```javascript
+import axios from "axios";
+
+export async function recognizeText(imageFile) {
+  const formData = new FormData();
+  formData.append("file", imageFile);
+
+  const response = await axios.post("http://localhost:5000/predict", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+    timeout: 30000
+  });
+
+  return response.data;
 }
 ```
 
 ---
 
-## Quick Start
+## **📝 Usage Flow**
 
-<details>
-<summary>Click to expand Quick Start Instructions</summary>
-
-1. **Clone Repository**
-
-```bash
-git clone https://github.com/your-username/sinhala-ocr.git
-cd backend
-```
-
-2. **Install Dependencies**
-
-```bash
-pip install -r requirements.txt
-```
-
-3. **Add Model Files**
-
-Place the following in `backend/models/`:
-
-* `sinhala_cnn.h5`
-* `label_map.json`
-
-4. **Run the Server**
-
-```bash
-python app.py
-```
-
-Server runs at:
-
-```
-http://localhost:5000
-```
-
-5. **Test Endpoints**
-
-* Health Check: `GET /health`
-* Image Prediction: `POST /predict` or `POST /predict/base64`
-
-</details>
+1. Open React frontend → Click **Open Camera** → Capture handwritten Sinhala.
+2. Image sent to Flask `/predict`.
+3. Backend returns recognized text + per-character confidence.
+4. Display results → copy, analyze, or export.
 
 ---
 
-## Error Handling
+## **💡 Tips for Developers**
 
-| Status Code | Meaning                                     |
-| ----------- | ------------------------------------------- |
-| 400         | Bad request (missing file or invalid input) |
-| 413         | File too large (>16MB)                      |
-| 415         | Unsupported file type                       |
-| 422         | Processing error (invalid image)            |
-| 500         | Internal server error                       |
-| 503         | Model not loaded                            |
+* Run **backend first**, then frontend.
+* Ensure **good lighting** & **flat paper** for best accuracy.
+* Adjust `gap_threshold` in `ocr_engine.py` for better word segmentation.
+* CNN accuracy depends on **dataset quality + data augmentation**.
+* Easily extendable: add more handwriting datasets or fine-tune model.
 
 ---
 
-## Performance Tips
+## **🛠️ Tech Stack**
 
-* Use clear, high-resolution images
-* Avoid shadows or blur
-* Keep text horizontally aligned
-* Use dark ink on a light background
-
----
-
-## Future Improvements
-
-* Language model for sentence correction
-* Transformer-based OCR (CRNN / TrOCR)
-* Batch processing endpoint
-* Bounding box visualization
-* Model optimization (ONNX / TensorRT)
-* PDF document OCR support
-* Confidence analytics
+* **Backend:** Python, Flask, TensorFlow/Keras, OpenCV
+* **Frontend:** React.js, Axios
+* **Data:** Handwritten Sinhala characters dataset
+* **Deployment:** Desktop & Mobile browsers
 
 ---
 
-## Tech Stack
+## **📖 References**
 
-* Python (Flask)
-* TensorFlow / Keras
-* OpenCV
-* NumPy
-* SciPy
+* TensorFlow CNN guide: [https://www.tensorflow.org/tutorials](https://www.tensorflow.org/tutorials)
+* Flask documentation: [https://flask.palletsprojects.com/](https://flask.palletsprojects.com/)
+* React docs: [https://reactjs.org/docs/getting-started.html](https://reactjs.org/docs/getting-started.html)
 
 ---
 
-## Author & Support
+✅ **Developer-friendly Summary:**
 
-**Vinura Deelaka**
-AI Enthusiast | Software Developer
-
-If you find this project useful:
-
-* Star the repository
-* Contribute improvements
-* Share with others
+* **Frontend:** Camera → API → display results.
+* **Backend:** Receives image → preprocess → segment → predict characters → combine text.
+* **CNN Model:** Recognizes Sinhala characters.
+* **JSON Output:** Text + confidence → frontend visualizes.
 
 ---
+
+
+Do you want me to do that next?
