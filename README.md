@@ -178,4 +178,3 @@ export async function recognizeText(imageFile) {
 ---
 
 
-Do you want me to do that next?
