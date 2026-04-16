@@ -101,11 +101,12 @@ def segment_characters(binary, lines):
 
         raw_chars = []
         for label in range(1, num_labels):
-            x    = stats[label, cv2.CC_STAT_LEFT]
-            y    = stats[label, cv2.CC_STAT_TOP]
-            w    = stats[label, cv2.CC_STAT_WIDTH]
-            h    = stats[label, cv2.CC_STAT_HEIGHT]
-            area = stats[label, cv2.CC_STAT_AREA]
+            # ✅ FIX: cast all NumPy intc values to native Python int
+            x    = int(stats[label, cv2.CC_STAT_LEFT])
+            y    = int(stats[label, cv2.CC_STAT_TOP])
+            w    = int(stats[label, cv2.CC_STAT_WIDTH])
+            h    = int(stats[label, cv2.CC_STAT_HEIGHT])
+            area = int(stats[label, cv2.CC_STAT_AREA])
 
             if w < MIN_CHAR_WIDTH or h < MIN_CHAR_HEIGHT or area < MIN_CHAR_AREA:
                 continue
@@ -116,7 +117,7 @@ def segment_characters(binary, lines):
             cy2 = min(binary.shape[0], y1 + y + h + CHAR_PADDING)
 
             raw_chars.append({
-                "image":   binary[cy1:cy2, x1:x2],
+                "image":  binary[cy1:cy2, x1:x2],
                 "x1": x1, "x2": x2,
                 "y1": cy1, "y2": cy2,
                 "area": area, "width": w,
@@ -134,10 +135,11 @@ def segment_characters(binary, lines):
                 new_y1 = min(prev["y1"], ch["y1"])
                 new_y2 = max(prev["y2"], ch["y2"])
                 merged[-1] = {
-                    "x1": new_x1, "x2": new_x2,
-                    "y1": new_y1, "y2": new_y2,
-                    "area": prev["area"] + ch["area"],
-                    "width": new_x2 - new_x1,
+                    # ✅ FIX: keep as native int after arithmetic too
+                    "x1": int(new_x1), "x2": int(new_x2),
+                    "y1": int(new_y1), "y2": int(new_y2),
+                    "area": int(prev["area"] + ch["area"]),
+                    "width": int(new_x2 - new_x1),
                     "image": binary[new_y1:new_y2, new_x1:new_x2],
                 }
             else:
@@ -266,5 +268,5 @@ def run_ocr(image_bytes):
         "line_count":     len(lines),
         "char_count":     len(char_results),
         "avg_confidence": sentence["avg_confidence"],
-        "image_size":     {"width": w, "height": h},
+        "image_size":     {"width": int(w), "height": int(h)},
     }

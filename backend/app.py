@@ -4,7 +4,9 @@ import os
 import sys
 import time
 
+import numpy as np
 from flask import Flask, jsonify, request
+from flask.json.provider import DefaultJSONProvider
 from flask_cors import CORS
 
 logging.basicConfig(
@@ -15,7 +17,24 @@ logging.basicConfig(
 )
 logger = logging.getLogger("app")
 
+
+# ✅ FIX: custom JSON provider that handles all NumPy scalar/array types
+class NumpyJSONProvider(DefaultJSONProvider):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        if isinstance(obj, np.bool_):
+            return bool(obj)
+        return super().default(obj)
+
+
 app = Flask(__name__)
+app.json_provider_class = NumpyJSONProvider
+app.json = NumpyJSONProvider(app)
 
 # Allow React dev server (port 3000) and Vite dev server (port 5173)
 CORS(app, resources={r"/*": {"origins": [
