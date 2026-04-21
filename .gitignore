@@ -1,23 +1,26 @@
-# Python
+# Python virtual environments
 venv/
 .venv/
+
+# Python cache
 __pycache__/
 *.pyc
 
 # Node
 node_modules/
-npm-debug.log*
-yarn-debug.log*
 
 # ML models
 *.h5
 *.pt
 *.pth
 
-# Cache
-.cache/
+# Logs & cache
 *.log
+.cache/
 
 # OS
 .DS_Store
 Thumbs.db
+
+dataset/
+backend/debug_crops/
